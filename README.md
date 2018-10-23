@@ -1,4 +1,4 @@
-Javascript visicomAutoComplete widget
+Javascript visicom-autocomplete widget
 ===================
 
 An extremely lightweight and powerful completion suggester.
@@ -7,22 +7,22 @@ Released under the MIT License: http://www.opensource.org/licenses/mit-license.p
 
 ## Features
 
-* Search address, settlement, POI etc. in one autocomplete
-* Add your callback to selection event
+* Search address, settlement, POI etc. in one autocomplete form
+* Add your callbacks to suggest selection event
 * Leaflet map support (zoom on selection)
 
 ## Installing
-Add imports:
+Add imports on your page:
 
 ```html
-<link rel="stylesheet" href="https://raw.githubusercontent.com/andrusha19/visicomAutoComplete/master/visicom-auto-complete.css">
+<link rel="stylesheet" href="https://raw.githubusercontent.com/andrusha19/visicom-autocomplete/master/visicom-autocomplete.css">
 ```
 
 ```html
-<script src="https://raw.githubusercontent.com/andrusha19/visicomAutoComplete/master/visicom-auto-complete.js"></script>
+<script src="https://raw.githubusercontent.com/andrusha19/visicom-autocomplete/master/visicom-autocomplete.js"></script>
 ```
 
-Create element in your html file:
+Create element in your html file ('a' tag will dispappear, please don't remove it):
 
 ```html
 <div id="visicom-autocomplete">
@@ -40,7 +40,7 @@ let ac = new visicomAutoComplete({
 ```
 
 Now we have such options:
-* apiKey - API key (required)
+* apiKey - your API key (required)
 * selector - autocomplete element div selector (default = '#visicom-autocomplete')
 * width - width of the autocomplete element (string, default = '400px')
 * height - height of the autocomplete element (string, default = '35px')
@@ -54,7 +54,7 @@ Now we have such options:
 * marker - custom Leaflet marker
 
 Returned object contains such methods:
-* clear - clear all text in input element and all suggests
+* clear - clear input value and all suggests
 
 ## Changelog
 

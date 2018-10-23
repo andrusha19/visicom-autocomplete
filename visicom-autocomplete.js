@@ -287,6 +287,7 @@ let visicomAutoComplete = (function(){
 
         function suggestSelected(selected){
             suggestsDiv.classList.remove('open');
+            input.value = suggests[selected].html.replace('<strong>', '').replace('</strong>', '');
             opt.onSuggestSelected(suggests[selected]);
             if(opt.map){
                 renderOnMap(suggests[selected]);
