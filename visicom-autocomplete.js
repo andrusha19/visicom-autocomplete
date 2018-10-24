@@ -1,17 +1,19 @@
 /*
-    JavaScript visicomAutoComplete v0.0.1
+    JavaScript visicomAutoComplete v0.0.2
     Copyright (c) 2018 Andrey Kotelnikov / Visicom
-    GitHub: https://github.com/andrusha19/JavaScript-autoComplete
+    GitHub: https://github.com/visicom-api/visicom-autocomplete
     License: http://www.opensource.org/licenses/mit-license.php
 */
 
 let visicomAutoComplete = (function(){
     
-    function autoComplete(options){
+    function visicomAutoCompleteFunction(options){
 
         let opt = {
             selector : '#visicom-autocomplete',
             apiUrl : `https://api.visicom.ua/data-api/4.0/{lang}/`,
+            proxyApiGeocodeUrl: '',
+            proxyApiFeatureUrl: '',
             apiKey : '',
             placeholder : 'Search...',
             minChars : 3,
@@ -30,11 +32,6 @@ let visicomAutoComplete = (function(){
         let autocomplete = getElement(opt.selector);
         if(!autocomplete){
             console.log(`Couldn't find element with '${opt.selector}' selector.`);
-            return;
-        }
-
-        if(!opt.apiKey){
-            console.log(`You didn't specify your API key.`);
             return;
         }
 
@@ -68,14 +65,21 @@ let visicomAutoComplete = (function(){
             return;
         }  
         autocomplete.removeChild(autocomplete.firstElementChild);
+
+        if(!opt.apiKey && !opt.proxyApiGeocodeUrl && !opt.proxyApiFeatureUrl){
+            console.log(`You didn't specify your API key.`);
+            return;
+        }
         
         let suggests = [];
         let selectedIndex = -1;
         let timer = null;
+        let selectedByArrow = false;
+        let searchText = '';
 
         if(opt.map && !opt.marker){
             if(typeof L === 'undefined' || L === null){
-                console.log('Leaflet object is not available.');
+                console.log('Leaflet object is not available. Cannot create marker object.');
             }else{
                 let iconSVG =  `<svg xmlns="http://www.w3.org/2000/svg" 
                                         width="24" height="24" viewBox="0 0 24 24">
@@ -115,23 +119,30 @@ let visicomAutoComplete = (function(){
         }
 
         addEvent(input, 'input', function(){
+            if(selectedByArrow){
+                selectedByArrow = false;
+                return;
+            }
+
+            selectedByArrow = false;
             selectedIndex = -1;
             clearTimeout(timer);
             timer = null;
 
             timer = setTimeout(function(){
-                let query = input.value;
+                searchText = input.value;
                 
-                if(query.length > 0){
+                if(searchText.length > 0){
                     closeDiv.classList.add('visible');
-                    if(query.length  < opt.minChars){
+                    if(searchText.length  < opt.minChars){
                         return;
                     }  
                     suggests = [];
                     let results = [];
                     suggestsDiv.classList.remove('open');
 
-                    results = Coordparsing.search(query);		
+                    // Search for coordinates in text
+                    results = Coordparsing.search(searchText);		
                     if(results.length){
                         results.forEach(function(coords){
                             var d = {
@@ -143,8 +154,9 @@ let visicomAutoComplete = (function(){
                         renderSuggests();
                         return;
                     }
+
                     results = [];
-                    makeGeocodeRequest(query)
+                    makeGeocodeRequest(searchText)
                         .then(json =>{
                             if(json.type === 'FeatureCollection'){
                                 results = json.features;
@@ -155,7 +167,7 @@ let visicomAutoComplete = (function(){
                             results.forEach(res => {
                                 if(res.properties.name || res.properties.vitrine)
                                     suggests.push({
-                                            html: feature2content(res, query, true),
+                                            html: feature2content(res, searchText, true),
                                             feature: res
                                         });
                             });
@@ -193,6 +205,7 @@ let visicomAutoComplete = (function(){
                 }
             // Arrow up or down pressed                    
             }else if(e.keyCode === 38 || e.keyCode === 40){
+                e.preventDefault();
                 if(suggests.length === 0)
                     return;
 
@@ -206,8 +219,13 @@ let visicomAutoComplete = (function(){
                 else    
                     selectedIndex = selectedIndex === suggests.length - 1 ? - 1 : selectedIndex + 1;
                 
-                if(selectedIndex >= 0)
+                if(selectedIndex >= 0){
+                    input.value = suggests[selectedIndex].html.replace('<strong>', '').replace('</strong>', '');
                     suggestsDiv.childNodes[selectedIndex].classList.add('selected');
+                }else{
+                    input.value = searchText;
+                    input.setSelectionRange(searchText.length, searchText.length);
+                }
             }                 
         });
 
@@ -260,13 +278,19 @@ let visicomAutoComplete = (function(){
                 opt.map.removeLayer(opt.marker); 
         }
 
-        function makeGeocodeRequest(query){            
-            return fetch(`${opt.apiUrl.replace('{lang}', opt.lang)}/geocode.json?text=${query}&key=${opt.apiKey}&limit=${opt.suggestsLimit}`)
+        function makeGeocodeRequest(text){     
+            let url = opt.proxyApiGeocodeUrl ?
+                `${opt.proxyApiGeocodeUrl}?text=${text}&lang=${opt.lang}&key=${opt.apiKey}&limit=${opt.suggestsLimit}` :
+                `${opt.apiUrl.replace('{lang}', opt.lang)}/geocode.json?text=${text}&key=${opt.apiKey}&limit=${opt.suggestsLimit}`;       
+            return fetch(url)
                 .then(data => data.json());                
         }
 
         function makeFeatureRequest(feature_id){            
-            return fetch(`${opt.apiUrl.replace('{lang}', opt.lang)}/feature/${feature_id}.json?key=${opt.apiKey}`)
+            let url = opt.proxyApiFeatureUrl ?
+                `${opt.proxyApiFeatureUrl}?feature_id=${feature_id}&lang=${opt.lang}&key=${opt.apiKey}` :
+                `${opt.apiUrl.replace('{lang}', opt.lang)}/feature/${feature_id}.json?key=${opt.apiKey}`;       
+            return fetch(url)
                 .then(data => data.json());  
         }
         
@@ -369,9 +393,7 @@ let visicomAutoComplete = (function(){
                 let quer = que.toLowerCase();
                 return description.indexOf(quer) < 0 ? 
                         dat :
-                        str(dat.substring(0, description.indexOf(quer)), "<strong>",
-                            dat.substring(description.indexOf(quer), description.indexOf(quer) + que.length), "</strong>",
-                            dat.substring(description.indexOf(quer) + que.length));
+                        `${dat.substring(0, description.indexOf(quer))}<strong>${dat.substring(description.indexOf(quer), description.indexOf(quer) + que.length)}</strong>${dat.substring(description.indexOf(quer) + que.length)}`;
             }
         
             function formatSettlementName(type, name){
@@ -381,10 +403,6 @@ let visicomAutoComplete = (function(){
 
         function startswith(cat, str) { 
             return cat.indexOf(str) === 0;
-        }
-
-        function str() {
-            return "".concat.apply("",arguments);
         }
 
         function compact(array){
@@ -445,7 +463,7 @@ let visicomAutoComplete = (function(){
                 .replace('MM', lng.minutes)  
                 .replace('SS', lng.seconds);  
 
-            return str(lat, " ", lng);
+            return `${lat} ${lng}`;
         }
 
         Coordparsing.parse = function(text)
@@ -538,7 +556,7 @@ let visicomAutoComplete = (function(){
         }
     }
 
-    return autoComplete;
+    return visicomAutoCompleteFunction;
 })();
 
 (function(){
