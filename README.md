@@ -16,7 +16,7 @@ Released under the MIT License: http://www.opensource.org/licenses/mit-license.p
 Add imports on your page:
 
 ```html
-<link rel="stylesheet" href="<link rel="stylesheet" href="https://raw.githubusercontent.com/andrusha19/visicom-autocomplete/master/visicom-autocomplete.css">">
+<link rel="stylesheet" href="https://raw.githubusercontent.com/andrusha19/visicom-autocomplete/master/visicom-autocomplete.css">">
 ```
 
 ```html
