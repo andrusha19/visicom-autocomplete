@@ -11,16 +11,18 @@ Released under the MIT License: http://www.opensource.org/licenses/mit-license.p
 * Add your callbacks to suggest selection event
 * Leaflet map support (zoom on selection)
 * Proxy servers support to hide your API key from client side
+* Coordinates parsing
+* Add your custom feature objects for searching
 
 ## Installing
 Add imports on your page:
 
 ```html
-<link rel="stylesheet" href="https://raw.githubusercontent.com/andrusha19/visicom-autocomplete/master/visicom-autocomplete.css">
+<link rel="stylesheet" href="https://raw.githubusercontent.com/visicom-api/visicom-autocomplete/master/visicom-autocomplete.min.css">
 ```
 
 ```html
-<script src="https://raw.githubusercontent.com/andrusha19/visicom-autocomplete/master/visicom-autocomplete.js"></script>
+<script src="https://raw.githubusercontent.com/visicom-api/visicom-autocomplete/master/visicom-autocomplete.min.js"></script>
 ```
 
 Create element in your html file ('a' tag will dispappear, you shouldn't remove it):
@@ -49,12 +51,14 @@ Now we have such options:
 * minCahrs - minimum length of input query for search to start (optional, number, default = 3)
 * delay - delay between key pressed for search to start, ms (optional, number, default = 150)
 * suggestsLimit - maximum count of suggests to display (optional, number, default = 5)
+* maxCharsInSuggest - maximum count of chars, displayed in suggest(optional, default = 55)
 * lang - language for search (optional, default = 'local', you can use one of: 'uk', 'en', 'ru')
 * onSuggestSelected - function to call when suggest was selected (optional, default = () => console.log)
 * map - Leaflet map object. When suggest selected, it will zoom on selected suggest (optional)
 * marker - custom Leaflet marker (optional)
 * proxyApiGeocodeUrl - your proxy url. Geocode requests will be send to that url. You don't need to specify API key. You'll recieve such parameters in GET request: text (search text), lang, key (API key), limit (suggestsLimit) (optional)
 * proxyApiFeatureUrl - your proxy url. Feature requests will be send to that url. You don't need to specify API key. You'll recieve such parameters in GET request: feature_id (feature id you are searching), lang, key (API key) (optional)
+* customFeatures - add your features. They will be displayed first in search results. (optional, array of objects, default = []). Each object should contain 3 fields: html (text, displayed in suggest), keywords (text filed, which contains words for searching), coords (array of two coordinate values of your feature)
 
 Be carefull when using your proxy server. You should return same JSON object to client side, which you recieve on your server side.
 
@@ -62,6 +66,10 @@ Returned object from visicomAutoComplete function contains such methods:
 * clear - clear input value and all suggests
 
 ## Changelog
+
+### Version 0.0.2 beta - 2018/10/25
+
+* Add custom feature objects support
 
 ### Version 0.0.2 beta - 2018/10/24
 

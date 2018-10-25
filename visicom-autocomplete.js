@@ -23,7 +23,9 @@ let visicomAutoComplete = (function(){
             map : null,
             marker: null,
             suggestsLimit : 5,
+            maxCharsInSuggest: 55,
             lang : 'local',
+            customFeatures: [],
             onSuggestSelected : suggest => console.log('Suggest selected: ' + (suggest.html)),            
         };
 
@@ -74,7 +76,6 @@ let visicomAutoComplete = (function(){
         let suggests = [];
         let selectedIndex = -1;
         let timer = null;
-        let selectedByArrow = false;
         let searchText = '';
 
         if(opt.map && !opt.marker){
@@ -119,12 +120,6 @@ let visicomAutoComplete = (function(){
         }
 
         addEvent(input, 'input', function(){
-            if(selectedByArrow){
-                selectedByArrow = false;
-                return;
-            }
-
-            selectedByArrow = false;
             selectedIndex = -1;
             clearTimeout(timer);
             timer = null;
@@ -140,6 +135,15 @@ let visicomAutoComplete = (function(){
                     suggests = [];
                     let results = [];
                     suggestsDiv.classList.remove('open');
+
+                    // Search for custom features
+                    opt.customFeatures.forEach(feat => {
+                        if(feat.keywords.toLowerCase().includes(searchText.toLocaleLowerCase()))
+                            suggests.push({
+                                html: trimToLength(feat.html, searchText, true),
+                                feature: {coords: feat.coords},
+                            });
+                    });
 
                     // Search for coordinates in text
                     results = Coordparsing.search(searchText);		
@@ -193,6 +197,9 @@ let visicomAutoComplete = (function(){
 
         addEvent(suggestsDiv, 'click', function(e){
             let selected = Array.prototype.indexOf.call(e.target.parentNode.children, e.target);
+            suggestsDiv.childNodes.forEach(el => el.classList.remove('selected'));
+            selectedIndex = selected;
+            suggestsDiv.childNodes[selectedIndex].classList.add('selected');
             suggestSelected(selected);
         });
 
@@ -209,14 +216,17 @@ let visicomAutoComplete = (function(){
                 if(suggests.length === 0)
                     return;
 
-                if(!suggestsDiv.classList.contains('open'))    
+                let wasClosed = false;    
+                if(!suggestsDiv.classList.contains('open')){    
                     suggestsDiv.classList.add('open');
+                    wasClosed = true;
+                }
 
                 suggestsDiv.childNodes.forEach(el => el.classList.remove('selected'));
 
-                if(e.keyCode === 38)
+                if(e.keyCode === 38 && !wasClosed)
                     selectedIndex = selectedIndex < 0 ? suggests.length - 1 : selectedIndex - 1;
-                else    
+                else if (!wasClosed)   
                     selectedIndex = selectedIndex === suggests.length - 1 ? - 1 : selectedIndex + 1;
                 
                 if(selectedIndex >= 0){
@@ -230,8 +240,13 @@ let visicomAutoComplete = (function(){
         });
 
         addEvent(input, 'focus', function(e){
-            suggestsDiv.childNodes.forEach(el => el.classList.remove('selected'));
-            if(suggests.length > 0){
+            if(suggests.length > 0 && !suggestsDiv.classList.contains('open')){
+                suggestsDiv.classList.add('open');
+            }
+        });
+
+        addEvent(input, 'click', function(e){
+            if(suggests.length > 0 && !suggestsDiv.classList.contains('open')){
                 suggestsDiv.classList.add('open');
             }
         });
@@ -242,7 +257,6 @@ let visicomAutoComplete = (function(){
 
         addEvent(getElement('body'), 'click', function(e){
             if(e.target == this){
-                selectedIndex = -1;
                 suggestsDiv.classList.remove('open');
                 input.blur();
             }
@@ -250,7 +264,6 @@ let visicomAutoComplete = (function(){
 
         if(opt.map){
             opt.map.on('click', function(){
-                selectedIndex = -1;
                 suggestsDiv.classList.remove('open');
                 input.blur();
             });
@@ -295,6 +308,7 @@ let visicomAutoComplete = (function(){
         }
         
         function renderSuggests(){
+            suggests = suggests.slice(0, opt.suggestsLimit);
             suggestsDiv.innerHTML = '';
             let output = '';
             suggests.forEach(suggest => {
@@ -309,14 +323,14 @@ let visicomAutoComplete = (function(){
             suggestsDiv.innerHTML = output;
         }
 
-        function suggestSelected(selected){
+        function suggestSelected(selected){            
+            input.value = suggests[selected].html.replace('<strong>', '').replace('</strong>', '');            
+            input.focus();
             suggestsDiv.classList.remove('open');
-            input.value = suggests[selected].html.replace('<strong>', '').replace('</strong>', '');
             opt.onSuggestSelected(suggests[selected]);
             if(opt.map){
                 renderOnMap(suggests[selected]);
             }
-            selectedIndex = -1;
         }
 
         function renderOnMap(suggest){
@@ -324,22 +338,20 @@ let visicomAutoComplete = (function(){
                 opt.map.removeLayer(opt.marker);  
 
             if(suggest.feature.coords !== undefined){
-                opt.map.panTo(suggest.feature.coords);	       
+                opt.map.setView(suggest.feature.coords, 19);	       
                 if(opt.marker){
                     opt.marker.setLatLng(suggest.feature.coords);
                     opt.map.addLayer(opt.marker);    
                 }                  				
-                setTimeout(() => opt.map.setZoom(19));
             }else{
                 makeFeatureRequest(suggest.feature.id)
                     .then(data => {                    
                         if(data.geometry.type === 'Point'){                            
-                            opt.map.panTo([data.geometry.coordinates[1], data.geometry.coordinates[0]]);	                                  
+                            opt.map.setView([data.geometry.coordinates[1], data.geometry.coordinates[0]], 19);	                                  
                             if(opt.marker){
                                 opt.marker.setLatLng([data.geometry.coordinates[1], data.geometry.coordinates[0]]);
                                 opt.map.addLayer(opt.marker); 
                             }					
-                            setTimeout(() => opt.map.setZoom(19));
                         }else{
                             opt.map.fitBounds(getBounds(data), {animate: true, maxZoom: 17});
                         }								
@@ -379,23 +391,6 @@ let visicomAutoComplete = (function(){
             
             return descr ? trimToLength(descr, q, isCompact) : trimToLength(prop.name, q, isCompact);
             
-            
-            function trimToLength(d, qu, isCompact){
-                return isCompact ? 
-                    (d.length >= 50 ? 
-                        replaceWithBold(d.substring(0, 55).concat('...'), qu) : 
-                        replaceWithBold(d, qu) ) : 
-                    d;
-            }
-
-            function replaceWithBold(dat,que){
-                let description = dat.toLowerCase();
-                let quer = que.toLowerCase();
-                return description.indexOf(quer) < 0 ? 
-                        dat :
-                        `${dat.substring(0, description.indexOf(quer))}<strong>${dat.substring(description.indexOf(quer), description.indexOf(quer) + que.length)}</strong>${dat.substring(description.indexOf(quer) + que.length)}`;
-            }
-        
             function formatSettlementName(type, name){
                 return type ? (name + " " + type) : name;
             }
@@ -403,6 +398,22 @@ let visicomAutoComplete = (function(){
 
         function startswith(cat, str) { 
             return cat.indexOf(str) === 0;
+        }
+
+        function trimToLength(d, qu, isCompact){
+            return isCompact ? 
+                (d.length >= opt.maxCharsInSuggest ? 
+                    replaceWithBold(d.substring(0, opt.maxCharsInSuggest).concat('...'), qu) : 
+                    replaceWithBold(d, qu) ) : 
+                d;
+        }
+
+        function replaceWithBold(dat,que){
+            let description = dat.toLowerCase();
+            let quer = que.toLowerCase();
+            return description.indexOf(quer) < 0 ? 
+                    dat :
+                    `${dat.substring(0, description.indexOf(quer))}<strong>${dat.substring(description.indexOf(quer), description.indexOf(quer) + que.length)}</strong>${dat.substring(description.indexOf(quer) + que.length)}`;
         }
 
         function compact(array){
