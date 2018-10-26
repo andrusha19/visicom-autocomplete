@@ -15,6 +15,10 @@ Released under the MIT License: http://www.opensource.org/licenses/mit-license.p
 * Add your custom feature objects for searching
 
 ## Installing
+To use Visicom autocomplete widget you should register in our system: https://api.visicom.ua/accounts/login 
+
+Get your API key and you are ready to use widget.
+
 Add imports on your page:
 
 ```html
@@ -34,7 +38,7 @@ Create element in your html file ('a' tag will dispappear, you shouldn't remove 
 ```
 
 Create new autocomplete object (you can specify options):
-```html
+```javascript
 <script>
 let ac = new visicomAutoComplete({        
     apiKey : 'YOUR_API_KEY',
@@ -52,7 +56,7 @@ Now we have such options:
 * delay - delay between key pressed for search to start, ms (optional, number, default = 150)
 * suggestsLimit - maximum count of suggests to display (optional, number, default = 5)
 * maxCharsInSuggest - maximum count of chars, displayed in suggest(optional, default = 55)
-* lang - language for search (optional, default = 'local', you can use one of: 'uk', 'en', 'ru')
+* lang - language for search (optional, default = 'local', you can use one of: 'local', 'uk', 'en', 'ru')
 * onSuggestSelected - function to call when suggest was selected (optional, default = () => console.log)
 * map - Leaflet map object. When suggest selected, it will zoom on selected suggest (optional)
 * marker - custom Leaflet marker (optional)
@@ -64,6 +68,75 @@ Be carefull when using your proxy server. You should return same JSON object to 
 
 Returned object from visicomAutoComplete function contains such methods:
 * clear - clear input value and all suggests
+
+## Usage
+Full example:
+```html
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+      <link rel="stylesheet" href="https://rawcdn.githack.com/visicom-api/visicom-autocomplete/8a745de427df007f3c11d709158cd343dfe86166/visicom-autocomplete.min.css">
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css">
+  </head>
+  <body>
+    
+    <div id="visicom-autocomplete">
+      <a href="https://api.visicom.ua/" target="_blank">© Visicom</a>
+    </div>
+    <div id="map" style="width: 800px; height: 400px;"></div>
+
+  </body>
+  <script type="text/javascript" src="https://rawcdn.githack.com/visicom-api/visicom-autocomplete/8a745de427df007f3c11d709158cd343dfe86166/visicom-autocomplete.min.js"></script>
+  <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"></script>
+  <script>
+
+    document.addEventListener('DOMContentLoaded', function(){
+        let map = new L.Map('map', {
+            center: new L.LatLng(50.455002, 30.511284), 
+            zoom: 9,                                
+            layers : [
+                new L.TileLayer(
+                    // paste below your private API key in key parameter
+                    'http://tms{s}.visicom.ua/2.0.0/planet3/base_ru/{z}/{x}/{y}.png?key=YOUR_API_KEY',
+                    {
+                    maxZoom : 19,
+                    tms : true,
+                    attribution : 'Данные карт © 2018 ЧАО «<a href="https://visicom.ua/">Визиком</a>»',
+                    subdomains : '123'
+                    }        
+                )
+            ]
+        }); 
+
+        let ac = new visicomAutoComplete({        
+            selector : '#visicom-autocomplete',      // search div selector
+            apiKey : 'YOUR_API_KEY',  // paste here your private API key
+            placeholder : 'Search your places...',   // placeholder for search input
+            minChars : 3,                            // min chars to start searching
+            delay : 150,                             // delay between key pressed for search to start
+            width : '400px',                         // width of search input
+            height : '35px',                         // height of search input
+            map: map,                                // map object to zoom on it
+            suggestsLimit : 5,                       // limit of suggests to display
+            maxCharsInSuggest: 55,                   // max chars to display in suggest
+            lang : 'local',                             // language for searching
+            onSuggestSelected : suggest => console.log('Suggest selected: ' + (suggest.html)), 
+            customFeatures: [{                       // custom feature objects
+                    html: 'наша фирма',
+                    keywords: 'киев вербицкого наша фирма',
+                    coords:[50, 30],
+                },
+                {
+                    html: 'тестовый вариант',
+                    keywords: 'чернигов шевченко 23',
+                    coords:[50.46537, 30.48019],
+                }],
+        });
+    });
+  </script>
+</html>
+```
 
 ## Changelog
 

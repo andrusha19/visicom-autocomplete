@@ -39,7 +39,7 @@
     display: none;
   }
 
-  .suggests {
+  .visicom-suggests {
     width: 100%;
     display: none;
     min-height: 40px;
@@ -49,10 +49,10 @@
     border-top: 1px solid #f4f4f4;
     border-left: 1px solid #f4f4f4;
   }
-  .suggests.open {
+  .visicom-suggests.open {
     display: block;
   }
-  .suggests div {
+  .visicom-suggests div {
     border-top: 1px solid #f4f4f4;
     box-shadow: 1px 0px 1px rgba(0, 0, 0, 0.24);
     padding: 15px 10px;
@@ -62,14 +62,14 @@
     cursor: pointer;
     transition: all 0.2s;
   }
-  .suggests div:hover {
+  visicom-suggests div:hover {
     background: #f2f2f2;
   }
   
-  .suggests div:last-child {
+  .visicom-suggests div:last-child {
     box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.24);
   }
 
-  .suggests .selected {
+  .visicom-suggests .selected {
     background: #f2f2f2;
   }

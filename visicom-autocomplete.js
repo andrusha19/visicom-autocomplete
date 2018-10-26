@@ -51,7 +51,7 @@ let visicomAutoComplete = (function(){
         input.setAttribute('spellcheck', 'false');
         
         let suggestsDiv = document.createElement('div');   
-        suggestsDiv.classList.add('suggests'); 
+        suggestsDiv.classList.add('visicom-suggests'); 
         
         let closeDiv = document.createElement('button');
         closeDiv.classList.add('close');
