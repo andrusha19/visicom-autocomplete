@@ -5,6 +5,8 @@ An extremely lightweight and powerful geocode completion suggester.
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
+![visicom-autocomplete examples](examples.gif)
+
 ## Features
 
 * Search address, settlement, POI etc. in one autocomplete form
@@ -111,7 +113,7 @@ Full example:
 
         let ac = new visicomAutoComplete({        
             selector : '#visicom-autocomplete',      // search div selector
-            apiKey : 'YOUR_API_KEY',  // paste here your private API key
+            apiKey : 'YOUR_API_KEY',                 // paste here your private API key
             placeholder : 'Search your places...',   // placeholder for search input
             minChars : 3,                            // min chars to start searching
             delay : 150,                             // delay between key pressed for search to start

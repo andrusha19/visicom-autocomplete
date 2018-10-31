@@ -352,6 +352,12 @@ let visicomAutoComplete = (function(){
                                 opt.marker.setLatLng([data.geometry.coordinates[1], data.geometry.coordinates[0]]);
                                 opt.map.addLayer(opt.marker); 
                             }					
+                        }else if(data.properties.categories.includes("adr_address")){
+                            opt.map.setView([data.geo_centroid.coordinates[1], data.geo_centroid.coordinates[0]], 19);	                                  
+                            if(opt.marker){
+                                opt.marker.setLatLng([data.geo_centroid.coordinates[1], data.geo_centroid.coordinates[0]]);
+                                opt.map.addLayer(opt.marker); 
+                            }
                         }else{
                             opt.map.fitBounds(getBounds(data), {animate: true, maxZoom: 17});
                         }								
